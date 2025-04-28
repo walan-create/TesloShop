@@ -9,7 +9,7 @@ import {
   Product,
   ProductsResponse,
 } from '@products/interfaces/product.interface';
-import { forkJoin, map, Observable, of, tap } from 'rxjs';
+import { forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // --------------------------- Constantes --------------------------------------
@@ -123,10 +123,10 @@ export class ProductsService {
   /**
    * Crea un producto en el servidor.
    */
-  createProduct(productLike: Partial<Product>): Observable<Product> {
+  createProduct(productLike: Partial<Product>, imageFileList?: FileList): Observable<Product> {
     return this.http
       .post<Product>(`${baseUrl}/products`, productLike)
-      .pipe(tap((product) => this.updateproductCache(product)));
+      .pipe(tap((product) => this.updateProductCache(product)));
   }
 
   /**
@@ -135,20 +135,34 @@ export class ProductsService {
    */
   updateProduct(
     id: string,
-    productLike: Partial<Product>
+    productLike: Partial<Product>,
+    imageFileList?: FileList
   ): Observable<Product> {
-    console.log('Actualizando producto');
-    // Lógica de actualización con HTTP PATCH.
-    return this.http
-      .patch<Product>(`${baseUrl}/products/${id}`, productLike)
-      .pipe(tap((product) => this.updateproductCache(product))); // Después de una respuesta exitosa actualizamos los datos del caché
+    const currentImages = productLike.images ?? [];
+
+    return this.uploadImages(imageFileList).pipe(// Vamos a regresar un observable, mandamos todas las imagenes y se empiezan a subir
+      map((imageNames) => ({
+        ...productLike,
+        images: [...currentImages, ...imageNames],
+      })),
+      switchMap((updatedProduct) =>
+        this.http.patch<Product>(`${baseUrl}/products/${id}`, updatedProduct)
+      ),
+      tap((product) => this.updateProductCache(product))// Actualizamos caché
+    );
+
+    // // Lógica de actualización con HTTP PATCH. (Metodo sin mapeo de imagenes)
+    // return this.http
+    //   .patch<Product>(`${baseUrl}/products/${id}`, productLike)
+    //   .pipe(tap((product) => this.updateProductCache(product))); // Después de una respuesta exitosa actualizamos los datos del caché
   }
+
 
   /**
    * Este metodo es para cuando se hace una actualizacion en un producto que no solamente quede
    * persistido en la BD sino que se actualicen los datos del caché y así disminuimos peticiones innecesarias
    */
-  updateproductCache(product: Product) {
+  updateProductCache(product: Product) {
     const productId = product.id;
     this.productCache.set(productId, product);
 
@@ -170,7 +184,9 @@ export class ProductsService {
       this.uploadImage(imageFile)
     );
     //Esperamos a que se carguen todas las imagenes
-    return forkJoin(uploadObservables);
+    return forkJoin(uploadObservables).pipe(
+      tap((imageNames) => console.log({ imageNames }))
+    );;
   }
 
   uploadImage(imageFile: File): Observable<string> {

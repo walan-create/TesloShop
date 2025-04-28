@@ -1,4 +1,11 @@
-import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProductCarouselComponent } from '@products/components/product-carousel/product-carousel.component';
 import { Product } from '@products/interfaces/product.interface';
@@ -18,7 +25,6 @@ import { firstValueFrom } from 'rxjs';
   templateUrl: './product-details.component.html',
 })
 export class ProductDetailsComponent implements OnInit {
-
   productsService = inject(ProductsService);
 
   product = input.required<Product>();
@@ -33,9 +39,12 @@ export class ProductDetailsComponent implements OnInit {
   // Para devolver tanto las imagenes del producto cómo las nuevas que se añaden
   imagesToCarousel = computed(() => {
     // Se crea un arreglo con ambas listas de imagenes a mostrar
-    const currentProductImages = [... this.product().images, ... this.tempImages()];
+    const currentProductImages = [
+      ...this.product().images,
+      ...this.tempImages(),
+    ];
     return currentProductImages;
-  })
+  });
 
   productForm = this.fb.group({
     title: ['', Validators.required],
@@ -98,14 +107,18 @@ export class ProductDetailsComponent implements OnInit {
     if (this.product().id === 'new') {
       // Crear Producto
       const product = await firstValueFrom(
-        this.productsService.createProduct(productLike)
+        this.productsService.createProduct(productLike, this.imageFileList)
       );
       this.router.navigate(['/admin/products', product.id]);
       console.log('Producto creado');
     } else {
       // Actualizar Producto
       await firstValueFrom(
-        this.productsService.updateProduct(this.product().id, productLike)
+        this.productsService.updateProduct(
+          this.product().id,
+          productLike,
+          this.imageFileList
+        )
       );
     }
 
