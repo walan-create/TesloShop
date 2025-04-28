@@ -41,6 +41,9 @@ export class AuthService {
   // Computed para obtener el token de forma reactiva
   token = computed<string | null>(() => this._token());
 
+  // Computed para obtener los roles de forma reactiva
+  isAdmin = computed<boolean>(() => this._user()?.roles.includes('admin') ?? false);
+
   //--------------- Métodos principales -------------------
 
   // Método para iniciar sesión

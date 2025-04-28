@@ -1,4 +1,13 @@
-import { AfterViewInit, Component, ElementRef, input, viewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  input,
+  OnChanges,
+  SimpleChange,
+  SimpleChanges,
+  viewChild,
+} from '@angular/core';
 import { environment } from 'src/environments/environment';
 // import Swiper JS
 import Swiper from 'swiper';
@@ -7,10 +16,9 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { Navigation, Pagination } from 'swiper/modules';
-import { ProductImagePipe } from "../../pipes/product-image.pipe";
+import { ProductImagePipe } from '../../pipes/product-image.pipe';
 
 const baseUrl = environment.baseUrl;
-
 
 @Component({
   selector: 'product-carousel',
@@ -23,8 +31,7 @@ const baseUrl = environment.baseUrl;
     }
   `,
 })
-export class ProductCarouselComponent implements AfterViewInit {
-
+export class ProductCarouselComponent implements AfterViewInit, OnChanges {
   images = input.required<string[]>();
 
   // La propiedad swiperDiv utiliza el decorador viewChild para obtener una referencia
@@ -32,18 +39,38 @@ export class ProductCarouselComponent implements AfterViewInit {
   // para inicializar o manipular dinámicamente el carrusel de imágenes (Swiper).
   swiperDiv = viewChild.required<ElementRef>('swiperDiv');
 
+  swiper: Swiper | undefined = undefined;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log(changes);
+    if (changes['images'].firstChange) {
+      return;
+    }
+    if ( !this.swiper ) return;
+    this.swiper.destroy(true, true);
+
+    const paginationEl: HTMLDivElement = this.swiperDiv().nativeElement?.querySelector('.swiper-pagination');
+
+    paginationEl.innerHTML = '';
+
+    setTimeout(() => {
+      this.swiperInit()
+    },100)
+  }
 
   ngAfterViewInit(): void {
-    const element = this.swiperDiv().nativeElement;
-    if ( !element ) return;
+    this.swiperInit();
+  }
 
-    const swiper = new Swiper(element, {
+  swiperInit() {
+    const element = this.swiperDiv().nativeElement;
+    if (!element) return;
+
+    this.swiper = new Swiper(element, {
       // Optional parameters
       direction: 'horizontal',
       loop: true,
-      modules: [
-        Navigation, Pagination
-      ],
+      modules: [Navigation, Pagination],
 
       // If we need pagination
       pagination: {
@@ -61,7 +88,5 @@ export class ProductCarouselComponent implements AfterViewInit {
         el: '.swiper-scrollbar',
       },
     });
-
   }
-
 }
