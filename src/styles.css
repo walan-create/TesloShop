@@ -3,6 +3,15 @@
 @plugin "daisyui" {
   themes: all;
 }
+@layer{
+  @font-face {
+    font-family: 'Montserrat';
+    src: url('/assets/fonts/montserrat/montserrat-alternates-medium.ttf') format('truetype');
+
+    font-weight: normal;
+    font-style: normal;
+  }
+}
 
 .font-montserrat {
   font-family: 'Montserrat', sans-serif;
