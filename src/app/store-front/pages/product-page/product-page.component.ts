@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { ProductCarouselComponent } from '@products/components/product-carousel/product-carousel.component';
 import { ProductsService } from '@products/services/products.service';
-import { ProductCarouselComponent } from "../../../products/components/product-carousel/product-carousel.component";
 
 @Component({
   selector: 'app-product-page',
